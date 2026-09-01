@@ -68,6 +68,11 @@
     background: rgba(255,180,0,.14); border: 1px solid rgba(255,180,0,.4);
     color: var(--orange); font-size: 12px; font-weight: 700;
   }
+  .conn-banner {
+    margin-top: 10px; padding: 8px 12px; border-radius: 10px;
+    background: rgba(255,90,106,.14); border: 1px solid rgba(255,90,106,.4);
+    color: var(--red); font-size: 12px; font-weight: 700;
+  }
 
   main { padding: 4px 16px 16px; flex: 1; }
   .view { display: none; }
@@ -337,6 +342,7 @@
     <div class="logo"><h1>GEGL</h1><span class="crew">Chosselcrew</span></div>
     <div class="tagline">Geen Eerste, Geen Laatste &middot; 10 rondes &middot; 8 spelers</div>
     <div class="demo-banner" id="demoBanner" hidden>DEMO-MODUS — geen backend gekoppeld, data blijft alleen in dit scherm</div>
+    <div class="conn-banner" id="connBanner" hidden>⚠️ Geen verbinding met de server — laatste bekende stand wordt getoond</div>
     <div id="timerBar" hidden>
       <span class="t-label" id="timerLabel"></span>
       <span class="t-time" id="timerTime"></span>
@@ -1063,6 +1069,7 @@ $("resetBtn").onclick = async () => {
 };
 
 /* ================= REFRESH / POLLING ================= */
+let connFailCount = 0;
 async function refresh() {
   try {
     const data = await api("/state");
@@ -1073,9 +1080,15 @@ async function refresh() {
       voting: data.voting || emptyVoting(),
       revealed: data.revealed === true,
     };
+    connFailCount = 0;
+    $("connBanner").hidden = true;
     syncLock();
     renderAll();
-  } catch { /* netwerkfoutje: volgende poll probeert opnieuw */ }
+  } catch {
+    /* pas na 2 gemiste pollingen tonen, zodat één hobbeltje niet meteen alarmeert */
+    connFailCount++;
+    if (connFailCount >= 2) $("connBanner").hidden = false;
+  }
 }
 
 /* ================= INIT ================= */

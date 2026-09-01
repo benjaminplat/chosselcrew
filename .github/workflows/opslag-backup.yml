@@ -1,0 +1,39 @@
+name: Opslag-backup
+
+# Pure backup: leest de huidige stand op uit de Cloudflare Worker (het publieke
+# GET /state, geen secret nodig) en committeert 'm in de repo. Geen rotatie,
+# geen restore-logica — alleen een vangnet naast Cloudflare KV zelf.
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Haal de huidige stand op uit de Worker
+        run: |
+          set -e
+          HTTP=$(curl -s -o payload.json -w "%{http_code}" "https://gegl-chosselcrew-api.benjaminplat.workers.dev/state")
+          if [ "$HTTP" != "200" ]; then
+            echo "Ophalen mislukt (HTTP $HTTP), response:" && cat payload.json && exit 1
+          fi
+
+      - name: Commit en push (alleen als er iets veranderd is)
+        run: |
+          mkdir -p data/snapshots
+          if [ ! -f data/backup.json ] || ! diff -q payload.json data/backup.json > /dev/null 2>&1; then
+            cp payload.json "data/snapshots/$(date -u +%Y%m%dT%H%M%SZ).json"
+          fi
+          cp payload.json data/backup.json
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/backup.json data/snapshots
+          git diff --cached --quiet || git commit -m "chore: uurlijkse opslag-backup (automatisch)"
+          git push
