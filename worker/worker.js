@@ -180,8 +180,9 @@ export default {
           const round = Number(body.round);
           const ranking = Array.isArray(body.ranking) ? body.ranking.map(String) : [];
 
-          if (!Number.isInteger(round) || round < 1 || round > NUM_ROUNDS) {
-            return error(`Ronde moet tussen 1 en ${NUM_ROUNDS} liggen.`);
+          /* Ronde 0 = automatisch berekende uitslag uit de community-stemming, vóór de echte rondes */
+          if (!Number.isInteger(round) || round < 0 || round > NUM_ROUNDS) {
+            return error(`Ronde moet tussen 0 en ${NUM_ROUNDS} liggen.`);
           }
 
           /* Lege ranking = alleen déze ronde wissen (los van "Alles resetten") */

@@ -438,6 +438,15 @@
           <div class="msg" id="revealMsg"></div>
         </div>
 
+        <h2>Ronde 0 · community-stemming</h2>
+        <div class="card">
+          <div class="hint">Berekent automatisch een uitslag uit de huidige quoteringen: de 2 grootste "eerste"-favorieten krijgen nu al 2 en 1 strafpunt, en de 2 grootste "laatste"-favorieten net zo — precies als een echte ronde.</div>
+          <div class="hint" id="round0Status" style="margin-top:8px"></div>
+          <button class="btn-primary" id="computeRound0Btn" style="margin-top:12px">Ronde 0 verwerken</button>
+          <button class="btn-secondary" id="resetRound0Btn" hidden style="margin-top:8px">Reset ronde 0</button>
+          <div class="msg" id="round0Msg"></div>
+        </div>
+
         <h2>Uitslag invoeren</h2>
         <div class="card">
           <div class="hint">Kies de ronde:</div>
@@ -770,7 +779,25 @@ function renderBoard() {
 
 function renderRounds() {
   const firstOpen = ROUNDS.find(r => !state.rounds[String(r.n)])?.n;
-  $("roundsList").innerHTML = ROUNDS.map(r => {
+  const r0 = state.rounds["0"];
+  let r0Html = "";
+  if (r0 && r0.length) {
+    const n = r0.length;
+    r0Html = `<div class="card round-card done">
+      <div class="round-head">
+        <span class="round-badge">0</span>
+        <span class="round-title">Community-stemming</span>
+        <span class="round-num">VERWERKT</span>
+      </div>
+      <div class="round-desc">Uitslag op basis van de stemquoteringen vóór de onthulling.</div>
+      <div class="round-result">` + r0.map((id, i) => {
+      const pos = i + 1;
+      const cls = (pos <= 2) ? "first" : (pos >= n - 1) ? "last" : "mid";
+      return `<span class="tag ${cls}">${pos}. ${esc(playerName(id))}</span>`;
+    }).join("") + `</div>
+    </div>`;
+  }
+  $("roundsList").innerHTML = r0Html + ROUNDS.map(r => {
     const ranking = state.rounds[String(r.n)];
     const status = ranking ? "done" : (r.n === firstOpen ? "current" : "");
     let result = "";
@@ -795,7 +822,55 @@ function renderRounds() {
   }).join("");
 }
 
+/* Ronde 0: 2 grootste favorieten op "eerste" -> plek 1+2, 2 grootste op
+ * "laatste" -> plek 7+8, de rest ertussenin (telt niet mee). Bij overlap
+ * (iemand favoriet op beide markten) schuift de tweede markt door naar de
+ * eerstvolgende nog vrije favoriet. */
+function computeRound0Ranking() {
+  const v = state.voting || emptyVoting();
+  const firstOdds = votingOdds(v.firstCounts);
+  const lastOdds = votingOdds(v.lastCounts);
+  const byOdds = (odds) => [...PLAYERS].sort((a, b) => parseFloat(odds[a.id]) - parseFloat(odds[b.id]));
+
+  const used = new Set();
+  const top2 = (sorted) => {
+    const picked = [];
+    for (const p of sorted) {
+      if (used.has(p.id)) continue;
+      picked.push(p.id);
+      used.add(p.id);
+      if (picked.length === 2) break;
+    }
+    return picked;
+  };
+
+  const [firstFav, firstRunnerUp] = top2(byOdds(firstOdds));
+  const [lastFav, lastRunnerUp] = top2(byOdds(lastOdds));
+  const middle = PLAYERS.map(p => p.id).filter(id => !used.has(id));
+
+  return [firstFav, firstRunnerUp, ...middle, lastRunnerUp, lastFav];
+}
+
+function renderRound0() {
+  const r0 = state.rounds["0"];
+  if (r0 && r0.length) {
+    const n = r0.length;
+    $("round0Status").innerHTML = "Verwerkt: " + r0.map((id, i) => {
+      const pos = i + 1;
+      const cls = (pos <= 2) ? "first" : (pos >= n - 1) ? "last" : "mid";
+      return `<span class="tag ${cls}">${pos}. ${esc(playerName(id))}</span>`;
+    }).join("");
+    $("computeRound0Btn").textContent = "Opnieuw berekenen (overschrijft)";
+    $("resetRound0Btn").hidden = false;
+  } else {
+    $("round0Status").textContent = "Nog niet verwerkt.";
+    $("computeRound0Btn").textContent = "Ronde 0 verwerken";
+    $("resetRound0Btn").hidden = true;
+  }
+}
+
 function renderAdmin() {
+  renderRound0();
   // Ronde-chips
   $("roundSelect").innerHTML = ROUNDS.map(r =>
     `<button class="round-chip ${r.n === selectedRound ? "sel" : ""} ${state.rounds[String(r.n)] ? "has-result" : ""}" data-round="${r.n}">${r.n}</button>`
@@ -1025,7 +1100,7 @@ $("teaserAdminBtn").onclick = async () => {
   adminCode = code || "demo";
   if (!DEMO) {
     try {
-      await api("/round", { method: "POST", admin: true, body: { round: 0, ranking: [] } });
+      await api("/round", { method: "POST", admin: true, body: { round: -1, ranking: [] } });
     } catch (e) {
       if (/admin-code/i.test(e.message)) { adminCode = null; return showMsg("teaserAdminMsg", "Onjuiste admin-code.", false); }
     }
@@ -1063,7 +1138,7 @@ $("adminLoginBtn").onclick = async () => {
   // een bewust ongeldige ronde; 401 = foute code, 400 = code goed.
   if (!DEMO) {
     try {
-      await api("/round", { method: "POST", admin: true, body: { round: 0, ranking: [] } });
+      await api("/round", { method: "POST", admin: true, body: { round: -1, ranking: [] } });
     } catch (e) {
       if (/admin-code/i.test(e.message)) { adminCode = null; return showMsg("adminLoginMsg", "Onjuiste admin-code.", false); }
     }
@@ -1084,6 +1159,25 @@ $("submitRoundBtn").onclick = async () => {
     if (next) selectedRound = next.n;
     renderAdmin();
   } catch (e) { showMsg("adminMsg", e.message, false); }
+};
+
+$("computeRound0Btn").onclick = async () => {
+  const ranking = computeRound0Ranking();
+  try {
+    await api("/round", { method: "POST", admin: true, body: { round: 0, ranking } });
+    await refresh();
+    renderRound0();
+    showMsg("round0Msg", "Ronde 0 verwerkt op basis van de community-stemming.", true);
+  } catch (e) { showMsg("round0Msg", e.message, false); }
+};
+
+$("resetRound0Btn").onclick = async () => {
+  try {
+    await api("/round", { method: "POST", admin: true, body: { round: 0, ranking: [] } });
+    await refresh();
+    renderRound0();
+    showMsg("round0Msg", "Ronde 0 gewist.", true);
+  } catch (e) { showMsg("round0Msg", e.message, false); }
 };
 
 $("resetRoundBtn").onclick = async () => {
