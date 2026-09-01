@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Vrijdag. 21:00.</title>
+<style>
+  /* TOTO-geïnspireerde huisstijl: groen + fel oranje + wit */
+  :root {
+    --bg: #0b4527;
+    --card: #105232;
+    --card2: #17613c;
+    --line: #237349;
+    --text: #f7fcf9;
+    --muted: #aad3bd;
+    --accent: #ff6900;
+    --orange: #ffb400;
+    --red: #ff5a6a;
+    --safe: #48e88f;
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { background: var(--bg); }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+  }
+  #app {
+    width: 100%;
+    max-width: 430px;           /* iPhone 17-breedte */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: calc(84px + env(safe-area-inset-bottom));
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    padding: 22px 20px 14px;
+    position: sticky; top: 0; z-index: 10;
+    background: linear-gradient(180deg, var(--bg) 75%, transparent);
+  }
+  .logo { display: flex; align-items: baseline; gap: 8px; }
+  .logo h1 {
+    font-size: 28px; font-weight: 900; font-style: italic; letter-spacing: -0.5px;
+    color: var(--accent); text-transform: uppercase;
+  }
+  .logo .crew {
+    font-size: 28px; font-weight: 900; font-style: italic;
+    color: var(--text); letter-spacing: -0.5px; text-transform: uppercase;
+  }
+  .tagline {
+    color: var(--muted); font-size: 11px; margin-top: 3px;
+    font-weight: 800; font-style: italic; text-transform: uppercase; letter-spacing: .5px;
+  }
+  .demo-banner {
+    margin-top: 10px; padding: 8px 12px; border-radius: 10px;
+    background: rgba(255,180,0,.14); border: 1px solid rgba(255,180,0,.4);
+    color: var(--orange); font-size: 12px; font-weight: 700;
+  }
+
+  main { padding: 4px 16px 16px; flex: 1; }
+  .view { display: none; }
+  .view.active { display: block; animation: fadeIn .18s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(4px);} to { opacity: 1; transform: none; } }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: var(--radius); padding: 16px; margin-bottom: 12px;
+  }
+  h2 { font-size: 15px; font-weight: 900; font-style: italic; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin: 18px 4px 10px; }
+  .hint { color: var(--muted); font-size: 13px; line-height: 1.5; }
+
+  /* ---------- Knoppen & inputs ---------- */
+  button {
+    font: inherit; border: none; cursor: pointer; border-radius: 14px;
+    font-weight: 800; transition: transform .06s ease, opacity .15s;
+  }
+  button:active { transform: scale(.97); }
+  button:disabled { opacity: .4; cursor: not-allowed; }
+  .btn-primary {
+    width: 100%; padding: 15px; font-size: 16px; background: var(--accent); color: #fff;
+    text-transform: uppercase; font-style: italic; letter-spacing: .5px;
+    box-shadow: 0 4px 14px rgba(255,105,0,.35);
+  }
+  .btn-secondary { width: 100%; padding: 13px; font-size: 15px; background: var(--card2); color: var(--text); border: 1px solid var(--line); }
+  .btn-danger { width: 100%; padding: 13px; font-size: 15px; background: rgba(255,90,106,.15); color: var(--red); border: 1px solid rgba(255,90,106,.4); }
+  input[type=text], input[type=password] {
+    width: 100%; padding: 14px; font-size: 16px; border-radius: 14px;
+    border: 1px solid var(--line); background: var(--card2); color: var(--text);
+    outline: none; margin-bottom: 10px;
+  }
+  input:focus { border-color: var(--accent); }
+
+  /* ---------- Teaser (vergrendeld tot de onthulling) ---------- */
+  body.locked header, body.locked nav { display: none; }
+  body.locked #app { padding-bottom: 20px; }
+  .teaser {
+    min-height: 94vh; display: flex; flex-direction: column;
+    justify-content: center; text-align: center; padding: 24px 6px;
+  }
+  .t-mark {
+    font-size: 52px; font-weight: 900; font-style: italic;
+    color: var(--accent); letter-spacing: -1px; line-height: 1;
+    text-transform: uppercase;
+    animation: tpulse 3.2s ease-in-out infinite;
+  }
+  .t-sub {
+    font-size: 16px; font-weight: 900; font-style: italic;
+    letter-spacing: 7px; color: var(--text); margin-top: 6px; text-transform: uppercase;
+  }
+  .t-crypt {
+    color: var(--muted); font-size: 14px; line-height: 1.8;
+    max-width: 300px; margin: 22px auto 28px; font-weight: 600;
+  }
+  .t-count {
+    font-size: 42px; font-weight: 900; font-style: italic;
+    color: var(--text); font-variant-numeric: tabular-nums; letter-spacing: 1px;
+  }
+  .t-count-label {
+    font-size: 10px; font-weight: 900; font-style: italic; letter-spacing: 3px;
+    color: var(--muted); text-transform: uppercase; margin: 4px 0 30px;
+  }
+  .t-done {
+    margin: 4px 0 0; padding: 14px; border-radius: 14px;
+    background: var(--card); border: 1px solid rgba(72,232,143,.4);
+    color: var(--safe); font-weight: 800; font-size: 14px;
+  }
+  .t-roster { margin-top: 20px; color: var(--muted); font-size: 13px; font-weight: 700; line-height: 1.7; }
+  .t-roster b { color: var(--text); }
+  .t-admin {
+    background: none; margin: 34px auto 0; padding: 8px;
+    color: rgba(170,211,189,.35); font-size: 10px; font-weight: 800;
+    letter-spacing: 2px; text-transform: uppercase;
+  }
+  @keyframes tpulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
+
+  /* ---------- Stemmen (teaser) ---------- */
+  .vote-card { text-align: left; }
+  .vote-q {
+    font-size: 13px; font-weight: 900; font-style: italic;
+    text-transform: uppercase; letter-spacing: 1px;
+    color: var(--text); margin: 16px 2px 8px;
+  }
+  .vq-sub { font-size: 10px; color: var(--muted); letter-spacing: .5px; }
+  .vote-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 4px; }
+  .vote-opt {
+    padding: 10px 6px; background: var(--card2); border: 1px solid var(--line);
+    border-radius: 12px; display: flex; flex-direction: column; gap: 3px;
+    align-items: center; color: var(--text); font-weight: 800; font-size: 13px;
+    line-height: 1.2; text-align: center;
+  }
+  .vote-opt .vo-odds {
+    font-size: 12px; font-weight: 900; color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .vote-opt.sel { border-color: var(--accent); background: rgba(255,105,0,.14); color: var(--accent); }
+  .vote-opt.sel .vo-odds { color: var(--accent); }
+  #voteBtn { margin-top: 14px; }
+
+  /* ---------- Quoteringen-pagina ---------- */
+  .odds-list-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 0; border-bottom: 1px solid var(--line);
+  }
+  .odds-list-row:last-child { border-bottom: none; }
+  .olr-name { flex: 1; font-weight: 800; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .olr-votes { font-size: 11px; color: var(--muted); font-weight: 800; width: 18px; text-align: right; flex-shrink: 0; }
+  .olr-track {
+    width: 64px; height: 6px; border-radius: 3px; flex-shrink: 0;
+    background: var(--card2); border: 1px solid var(--line); overflow: hidden;
+  }
+  .olr-fill { height: 100%; background: var(--accent); transition: width .5s ease; }
+  .olr-odds {
+    font-size: 15px; font-weight: 900; font-style: italic; color: var(--accent);
+    width: 52px; text-align: right; font-variant-numeric: tabular-nums; flex-shrink: 0;
+  }
+
+  /* ---------- Scorebord ---------- */
+  .board-row {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 16px; padding: 12px 14px; margin-bottom: 8px;
+    transition: transform .5s cubic-bezier(.22,.9,.3,1);
+    will-change: transform;
+  }
+  .board-row.danger { border-color: rgba(255,90,106,.55); background: linear-gradient(90deg, rgba(255,90,106,.10), var(--card)); }
+  .board-row.me { outline: 2px solid rgba(255,105,0,.6); }
+  .pos { width: 30px; font-size: 17px; font-weight: 900; color: var(--muted); text-align: center; flex-shrink: 0; }
+  .board-name { flex: 1; font-weight: 800; font-size: 16px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .board-name small { display: block; font-size: 11px; color: var(--muted); font-weight: 600; }
+  .pts { font-size: 20px; font-weight: 900; }
+  .pts.zero { color: var(--safe); }
+  .pts.hot { color: var(--red); }
+  .pts small { font-size: 11px; font-weight: 700; color: var(--muted); }
+  .straf-tag {
+    font-size: 10px; font-weight: 900; font-style: italic; letter-spacing: .8px;
+    color: var(--red); border: 1px solid rgba(255,90,106,.5);
+    padding: 3px 8px; border-radius: 999px; flex-shrink: 0;
+  }
+  .koning-tag {
+    font-size: 10px; font-weight: 900; font-style: italic; letter-spacing: .8px;
+    color: var(--safe); border: 1px solid rgba(72,232,143,.5);
+    padding: 3px 8px; border-radius: 999px; flex-shrink: 0;
+  }
+  .odds {
+    font-size: 11px; font-weight: 800; color: var(--muted);
+    background: var(--card2); border: 1px solid var(--line);
+    padding: 3px 7px; border-radius: 8px; flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .mov { font-size: 11px; font-weight: 900; margin-left: 5px; }
+  .mov.up { color: var(--safe); }
+  .mov.down { color: var(--red); }
+
+  /* ---------- Rondetimer ---------- */
+  #timerBar[hidden] { display: none; }
+  #timerBar {
+    margin-top: 10px; padding: 10px 16px; border-radius: 14px;
+    background: var(--card); border: 1px solid var(--accent);
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+  }
+  #timerBar .t-label {
+    font-size: 11px; font-weight: 900; font-style: italic; letter-spacing: .8px;
+    color: var(--muted); text-transform: uppercase;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  #timerBar .t-time {
+    font-size: 30px; font-weight: 900; font-style: italic; color: var(--accent);
+    font-variant-numeric: tabular-nums; flex-shrink: 0;
+  }
+  #timerBar.urgent { border-color: var(--red); }
+  #timerBar.urgent .t-time { color: var(--red); }
+  .timer-btns { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 10px; }
+  .timer-btn {
+    padding: 12px 0; font-size: 14px; font-weight: 900;
+    background: var(--card2); color: var(--text); border: 1px solid var(--line); border-radius: 12px;
+  }
+  .timer-btn.stop { color: var(--red); border-color: rgba(255,90,106,.4); }
+  .progress-pill {
+    display: inline-block; padding: 6px 12px; border-radius: 999px;
+    background: var(--card2); border: 1px solid var(--line);
+    font-size: 12px; font-weight: 800; color: var(--muted); margin-bottom: 12px;
+  }
+  .empty { text-align: center; color: var(--muted); padding: 30px 10px; font-size: 14px; }
+
+  /* ---------- Rondes ---------- */
+  .round-card { border-left: 4px solid var(--line); }
+  .round-card.done { border-left-color: var(--safe); }
+  .round-card.current { border-left-color: var(--accent); }
+  .round-head { display: flex; align-items: center; gap: 10px; }
+  .round-badge {
+    width: 34px; height: 34px; flex-shrink: 0; border-radius: 9px;
+    background: var(--card2); border: 1px solid var(--line);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 900; font-style: italic; color: var(--muted);
+  }
+  .round-card.current .round-badge { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .round-card.done .round-badge { color: var(--safe); border-color: rgba(72,232,143,.4); }
+  .round-title { font-weight: 900; font-style: italic; font-size: 16px; flex: 1; text-transform: uppercase; letter-spacing: .3px; }
+  .round-num { font-size: 10px; font-weight: 900; font-style: italic; color: var(--muted); letter-spacing: .8px; }
+  .round-card.done .round-num { color: var(--safe); }
+  .round-desc { color: var(--muted); font-size: 13px; line-height: 1.5; margin-top: 6px; }
+  .round-needs { font-size: 12px; color: var(--muted); margin-top: 6px; font-weight: 700; }
+  .round-result { margin-top: 10px; padding-top: 10px; border-top: 1px dashed var(--line); font-size: 13px; line-height: 1.7; }
+  .tag { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 800; margin: 1px 4px 1px 0; }
+  .tag.first { background: rgba(255,90,106,.18); color: var(--red); }
+  .tag.last { background: rgba(255,180,0,.18); color: var(--orange); }
+  .tag.mid { background: var(--card2); color: var(--muted); }
+
+  /* ---------- Admin ---------- */
+  .pick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+  .pick-btn {
+    padding: 13px 10px; font-size: 14px; font-weight: 800;
+    background: var(--card2); color: var(--text); border: 1px solid var(--line); border-radius: 14px;
+    position: relative;
+  }
+  .pick-btn.picked { background: rgba(255,105,0,.14); border-color: var(--accent); color: var(--accent); }
+  .pick-btn .order-badge {
+    position: absolute; top: -7px; right: -5px;
+    background: var(--accent); color: #fff; font-size: 12px; font-weight: 900;
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .round-select { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin: 8px 0; }
+  .round-chip {
+    flex-shrink: 0; width: 42px; height: 42px; border-radius: 12px;
+    background: var(--card2); border: 1px solid var(--line); color: var(--text);
+    font-size: 15px; font-weight: 900;
+  }
+  .round-chip.sel { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .round-chip.has-result { border-color: var(--safe); }
+  .msg { padding: 10px 12px; border-radius: 12px; font-size: 13px; font-weight: 700; margin: 8px 0; display: none; }
+  .msg.ok { display: block; background: rgba(61,220,133,.12); color: var(--safe); }
+  .msg.err { display: block; background: rgba(255,90,106,.12); color: var(--red); }
+  .admin-list-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--line); font-size: 14px; font-weight: 700; }
+  .admin-list-row:last-child { border-bottom: none; }
+  .mini-btn { padding: 6px 12px; font-size: 12px; border-radius: 10px; background: rgba(255,90,106,.15); color: var(--red); }
+
+  /* ---------- Tabbar ---------- */
+  nav {
+    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 100%; max-width: 430px;
+    display: flex; background: rgba(8,48,27,.96); backdrop-filter: blur(14px);
+    border-top: 1px solid var(--line);
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+    z-index: 20;
+  }
+  nav button {
+    flex: 1; background: none; color: var(--muted);
+    font-size: 11px; font-weight: 900; font-style: italic;
+    text-transform: uppercase; letter-spacing: .5px;
+    padding: 14px 0 12px; border-radius: 0; position: relative;
+  }
+  nav button.active { color: #fff; }
+  nav button.active::after {
+    content: ""; position: absolute; left: 25%; right: 25%; bottom: 4px;
+    height: 3px; border-radius: 3px; background: var(--accent);
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="logo"><h1>GEGL</h1><span class="crew">Chosselcrew</span></div>
+    <div class="tagline">Geen Eerste, Geen Laatste &middot; 10 rondes &middot; 8 spelers</div>
+    <div class="demo-banner" id="demoBanner" hidden>DEMO-MODUS — geen backend gekoppeld, data blijft alleen in dit scherm</div>
+    <div id="timerBar" hidden>
+      <span class="t-label" id="timerLabel"></span>
+      <span class="t-time" id="timerTime"></span>
+    </div>
+  </header>
+
+  <main>
+    <!-- ================= TEASER (tot de onthulling) ================= -->
+    <section class="view" id="view-teaser">
+      <div class="teaser">
+        <div class="t-mark">Vrijdag</div>
+        <div class="t-sub">21:00 · Chosselcrew</div>
+        <p class="t-crypt">Vergelijk het met gokken op paarden: je mag 4 stemmen uitdelen.<br>2x op wie eerste wordt en 2x op wie laatste wordt.<br>Want zoals je weet: nooit op 1 paard wedden.</p>
+        <div class="t-count" id="teaserCount">—</div>
+        <div class="t-count-label">Tot de onthulling</div>
+
+        <div class="card vote-card">
+          <input type="text" id="voterName" placeholder="Je naam" maxlength="20" autocomplete="off">
+          <div class="vote-q">Wie wordt er eerste? <span class="vq-sub">kies er 2</span></div>
+          <div class="vote-grid" id="voteFirstGrid"></div>
+          <div class="vote-q">Wie wordt er laatste? <span class="vq-sub">kies er 2</span></div>
+          <div class="vote-grid" id="voteLastGrid"></div>
+          <button class="btn-primary" id="voteBtn" disabled>Breng je stemmen uit</button>
+          <div class="msg" id="voteMsg"></div>
+        </div>
+        <div class="t-roster" id="teaserRoster"></div>
+        <button class="t-admin" id="teaserAdminLink">spelleider</button>
+        <div class="card" id="teaserAdminBox" hidden>
+          <input type="password" id="teaserAdminCode" placeholder="Admin-code" autocomplete="off">
+          <button class="btn-secondary" id="teaserAdminBtn">Ontgrendel</button>
+          <div class="msg" id="teaserAdminMsg"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SCOREBORD ================= -->
+    <section class="view" id="view-board">
+      <span class="progress-pill" id="progressPill"></span>
+      <div id="boardList"></div>
+      <p class="hint" style="margin-top:14px">De drie met de meeste strafpunten staan op STRAF. Minste punten = chosselkoning. Het getal per speler is de straf-quotering: hoe lager, hoe waarschijnlijker een eindstraf.</p>
+    </section>
+
+    <!-- ================= RONDES ================= -->
+    <section class="view" id="view-rounds">
+      <div id="roundsList"></div>
+    </section>
+
+    <!-- ================= QUOTERINGEN ================= -->
+    <section class="view" id="view-odds">
+      <span class="progress-pill" id="oddsPill"></span>
+      <h2>Wie wordt eerste?</h2>
+      <div class="card" id="oddsFirst"></div>
+      <h2>Wie wordt laatste?</h2>
+      <div class="card" id="oddsLast"></div>
+      <p class="hint">De quoteringen bewegen live mee met de stemmen van de crew. Laag = de favoriet volgens de groep.</p>
+    </section>
+
+    <!-- ================= ADMIN ================= -->
+    <section class="view" id="view-admin">
+      <div class="card" id="adminLogin">
+        <p class="hint" style="margin-bottom:10px">Alleen voor de spelleider. Vul de admin-code in.</p>
+        <input type="password" id="adminCode" placeholder="Admin-code" autocomplete="off">
+        <button class="btn-primary" id="adminLoginBtn">Ontgrendel</button>
+        <div class="msg" id="adminLoginMsg"></div>
+      </div>
+
+      <div id="adminPanel" hidden>
+        <h2>Onthulling</h2>
+        <div class="card">
+          <div class="hint" id="revealStatus"></div>
+          <button class="btn-primary" id="revealBtn" style="margin-top:12px"></button>
+          <div class="msg" id="revealMsg"></div>
+        </div>
+
+        <h2>Uitslag invoeren</h2>
+        <div class="card">
+          <div class="hint">Kies de ronde:</div>
+          <div class="round-select" id="roundSelect"></div>
+          <div class="hint" id="pickHint">Tik de spelers aan in volgorde van uitslag: eerst nummer 1, als laatste nummer 8. Nogmaals tikken = eruit halen.</div>
+          <div class="pick-grid" id="pickGrid"></div>
+          <button class="btn-primary" id="submitRoundBtn" disabled>Uitslag opslaan</button>
+          <div class="msg" id="adminMsg"></div>
+        </div>
+
+        <h2>Rondetimer</h2>
+        <div class="card">
+          <div class="hint">Start een countdown voor de hierboven gekozen ronde — live zichtbaar op alle telefoons.</div>
+          <div class="timer-btns" id="timerBtns">
+            <button class="timer-btn" data-sec="30">0:30</button>
+            <button class="timer-btn" data-sec="60">1:00</button>
+            <button class="timer-btn" data-sec="120">2:00</button>
+            <button class="timer-btn stop" data-sec="0">Stop</button>
+          </div>
+          <div class="msg" id="timerMsg"></div>
+        </div>
+
+        <h2>Gevarenzone</h2>
+        <div class="card">
+          <button class="btn-danger" id="resetBtn">Alles resetten (stemmen + scores)</button>
+          <div class="msg" id="resetMsg"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <nav>
+    <button data-view="board" class="active">Scorebord</button>
+    <button data-view="rounds">Rondes</button>
+    <button data-view="odds">Quotering</button>
+    <button data-view="admin">Admin</button>
+  </nav>
+</div>
+
+<script>
+/* ================= CONFIG =================
+ * Zet hier de URL van je Cloudflare Worker, bijv.
+ *   const API_BASE = "https://gegl-chosselcrew-api.jouwnaam.workers.dev";
+ * Leeg laten = demo-modus (alles blijft lokaal in dit scherm).
+ * De admin-code staat NIET in deze code: die leeft als secret in de Worker
+ * en wordt alleen als header meegestuurd bij admin-acties.
+ */
+const API_BASE = "https://gegl-chosselcrew-api.benjaminplat.workers.dev";
+const POLL_MS = 5000;
+
+/* De countdown op de teaser telt af naar dit moment — puur sfeer. De app ontgrendelt
+ * NIET automatisch: dat doe jij als spelleider met de Onthul-knop in het adminpaneel
+ * (binnenkomen kan altijd via de "spelleider"-link onderaan de teaser + admin-code). */
+const REVEAL_AT = new Date("2026-09-04T21:00:00");
+
+const ROUNDS = [
+  { n: 1,  title: "Pipey trekken",        desc: "Wie trekt het snelst (of juist het langzaamst) een rietadtje leeg? Ranking op tijd.", needs: "Rietjes + drankje" },
+  { n: 2,  title: "De geheime bieding",   desc: "Schrijf stiekem een getal tussen 1 en 100 op. Hoogste bieder is nummer 1, laagste is nummer 8. Let op: gelijke getallen zijn ongeldig — die spelers krijgen automatisch de uiterste plekken.", needs: "Briefjes + pennen" },
+  { n: 3,  title: "Stop de tijd",          desc: "Start de stopwatch, telefoon dicht, en stop op gevoel precies op 35 seconden. Dichtstbij wint.", needs: "Telefoon met stopwatch" },
+  { n: 4,  title: "Raad het gewicht",      desc: "Er ligt iets op de keukenweegschaal. Raad het gewicht in grammen. Dichtstbij is nummer 1.", needs: "Keukenweegschaal + object + papier & pen" },
+  { n: 5,  title: "Papieren piloot",       desc: "Vouw in 3 minuten een papieren vliegtuigje en gooi vanaf de lijn. Ranking op afstand.", needs: "A4-papier + plakband" },
+  { n: 6,  title: "Ren een ronde om",      desc: "Ren zo snel mogelijk een ronde om (route nader te bepalen). Snelste is nummer 1, langzaamste is nummer 8.", needs: "Route + stopwatch" },
+  { n: 7,  title: "De flamingo",           desc: "Op één been, ogen dicht, armen over elkaar. Wie het langst blijft staan is nummer 1.", needs: "Niets — alleen een timer" },
+  { n: 8,  title: "Doprand sjoelen",       desc: "Schuif een bierdop zo dicht mogelijk naar de tafelrand. Eraf = automatisch laatste.", needs: "Kroonkurken + gladde tafel" },
+  { n: 9,  title: "Raad de datum",         desc: "Raad de exacte releasedatum van GTA San Andreas (dag, maand én jaar). Dichtstbij is nummer 1.", needs: "Briefjes + pennen" },
+  { n: 10, title: "CHOSSELCREW Scrabble",  desc: "Maak in 1 minuut het langste woord met alleen letters uit CHOSSELCREW. Ongeldig woord = laatste.", needs: "Briefjes + pennen + timer" },
+];
+
+/* ================= STATE ================= */
+const DEMO = !API_BASE;
+
+/* De 8 vaste deelnemers (zelfde lijst als in de Worker) */
+const PLAYERS = [
+  { id: "doedelzakje", name: "Mr. Doedelzakje" },
+  { id: "piraatlarzz", name: "Piraatlarzz" },
+  { id: "rikcement", name: "RikCement" },
+  { id: "nabil", name: "Nabil Amzieb" },
+  { id: "ekteboyas", name: "EkteBoyas" },
+  { id: "regenmortel", name: "Regenmortel-Solutions" },
+  { id: "demanager", name: "De manager" },
+  { id: "appno", name: "Appno" },
+];
+
+function emptyVoting() {
+  const firstCounts = {}, lastCounts = {};
+  PLAYERS.forEach(p => { firstCounts[p.id] = 0; lastCounts[p.id] = 0; });
+  return { firstCounts, lastCounts, total: 0, voters: [] };
+}
+
+let state = { players: PLAYERS, rounds: {}, timer: null, voting: emptyVoting(), revealed: false };
+let adminCode = null;       // alleen in geheugen
+let voteFirst = [];         // huidige selectie "wie wordt eerste" (precies 2)
+let voteLast = [];          // huidige selectie "wie wordt laatste" (precies 2)
+let pickedOrder = [];       // playerIds in volgorde 1..n
+let selectedRound = 1;
+let currentView = "board";
+let lastOrderKey = null;    // voor scorebord-animatie
+let prevIndexById = {};     // vorige positie per speler
+let lastMovement = {};      // ▲/▼ sinds laatste positiewisseling
+let adminUnlocked = false;  // spelleider mag vóór de onthulling naar binnen
+
+function locked() { return !state.revealed && !adminUnlocked; }
+function unlockApp() {
+  document.body.classList.remove("locked");
+  document.title = "GEGL Chosselcrew";
+  showView("board");
+}
+function lockApp() {
+  document.body.classList.add("locked");
+  document.title = "Vrijdag. 21:00.";
+  showView("teaser");
+}
+/* Houd de vergrendeling in sync met de server-vlag (realtime via polling) */
+function syncLock() {
+  const isLockedNow = document.body.classList.contains("locked");
+  if (!locked() && isLockedNow) unlockApp();
+  else if (locked() && !isLockedNow) lockApp();
+}
+
+/* localStorage kan geblokkeerd zijn (preview/privémodus) — altijd guarden */
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch {} },
+  del(k) { try { localStorage.removeItem(k); } catch {} },
+};
+
+/* ================= API ================= */
+async function api(path, opts = {}) {
+  if (DEMO) return demoApi(path, opts);
+  const headers = { "Content-Type": "application/json" };
+  if (opts.admin && adminCode) headers["X-Admin-Code"] = adminCode;
+  const res = await fetch(API_BASE + path, {
+    method: opts.method || "GET",
+    headers,
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || "Er ging iets mis (" + res.status + ")");
+  return data;
+}
+
+/* Demo-backend in het geheugen, zodat je zonder Worker kunt proefdraaien */
+const demoVotes = {};
+function demoVotingSummary() {
+  const v = emptyVoting();
+  for (const vote of Object.values(demoVotes)) {
+    for (const id of vote.first) if (v.firstCounts[id] !== undefined) v.firstCounts[id]++;
+    for (const id of vote.last) if (v.lastCounts[id] !== undefined) v.lastCounts[id]++;
+    v.voters.push(vote.name);
+  }
+  v.total = v.voters.length;
+  return v;
+}
+function demoApi(path, opts) {
+  const body = opts.body || {};
+  if (path === "/state") {
+    return Promise.resolve({
+      players: PLAYERS,
+      rounds: structuredClone(state.rounds),
+      timer: state.timer ? { ...state.timer } : null,
+      voting: demoVotingSummary(),
+      revealed: state.revealed === true,
+    });
+  }
+  if (path === "/reveal") {
+    state.revealed = body.revealed === true;
+    return Promise.resolve({ ok: true });
+  }
+  if (path === "/vote") {
+    const voter = String(body.voter || "").trim();
+    if (!voter) return Promise.reject(new Error("Vul eerst je naam in."));
+    const f = Array.isArray(body.first) ? body.first : [];
+    const l = Array.isArray(body.last) ? body.last : [];
+    if (f.length !== 2 || l.length !== 2) return Promise.reject(new Error("Kies bij beide vragen precies 2 namen."));
+    if (f.some(id => l.includes(id))) return Promise.reject(new Error("Je kunt niet op dezelfde persoon voor eerste én laatste wedden."));
+    demoVotes[voter.toLowerCase()] = { name: voter, first: f, last: l };
+    return Promise.resolve({ ok: true });
+  }
+  if (path === "/round") {
+    state.rounds[String(body.round)] = body.ranking;
+    if (state.timer && state.timer.round === body.round) state.timer = null;
+    return Promise.resolve({ ok: true });
+  }
+  if (path === "/timer") {
+    state.timer = body.seconds > 0 ? { round: body.round, endsAt: Date.now() + body.seconds * 1000 } : null;
+    return Promise.resolve({ ok: true });
+  }
+  if (path === "/reset") {
+    state = { players: PLAYERS, rounds: {}, timer: null, voting: emptyVoting(), revealed: false };
+    for (const k of Object.keys(demoVotes)) delete demoVotes[k];
+    return Promise.resolve({ ok: true });
+  }
+  return Promise.reject(new Error("Onbekend endpoint"));
+}
+
+/* ================= PUNTEN =================
+ * GEGL met 8 spelers: nr 1 -> 2 strafpunten, nr 2 -> 1, nr 7 -> 1, nr 8 -> 2.
+ * Algemeen (n spelers): eerste & laatste 2pt, tweede & voorlaatste 1pt.
+ */
+function computeScores() {
+  const scores = {};
+  const detail = {};
+  for (const p of state.players) { scores[p.id] = 0; detail[p.id] = { first: 0, second: 0, secondLast: 0, last: 0 }; }
+  for (const ranking of Object.values(state.rounds)) {
+    const n = ranking.length;
+    if (n < 4) continue;
+    ranking.forEach((id, i) => {
+      if (!(id in scores)) return;
+      const pos = i + 1;
+      if (pos === 1) { scores[id] += 2; detail[id].first++; }
+      else if (pos === 2) { scores[id] += 1; detail[id].second++; }
+      else if (pos === n) { scores[id] += 2; detail[id].last++; }
+      else if (pos === n - 1) { scores[id] += 1; detail[id].secondLast++; }
+    });
+  }
+  return { scores, detail };
+}
+
+/* Straf-quotering per speler: kans op eindstraf (3 van de 8 plekken), TOTO-stijl.
+ * Naarmate er meer rondes gespeeld zijn weegt de tussenstand zwaarder. */
+function computeOdds(scores, played) {
+  const ids = Object.keys(scores);
+  if (!ids.length) return {};
+  const exp = 1 + 2.2 * (played / ROUNDS.length);
+  const weights = {};
+  let sum = 0;
+  ids.forEach(id => { const w = Math.pow(scores[id] + 1, exp); weights[id] = w; sum += w; });
+  const odds = {};
+  ids.forEach(id => {
+    let p = (3 * weights[id]) / sum;
+    p = Math.min(0.97, Math.max(0.03, p));
+    odds[id] = (1 / p).toFixed(2);
+  });
+  return odds;
+}
+
+/* ================= RENDER ================= */
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+function playerName(id) {
+  const p = state.players.find(p => p.id === id);
+  return p ? p.name : "?";
+}
+
+function renderBoard() {
+  const { scores, detail } = computeScores();
+  const done = Object.keys(state.rounds).filter(k => state.rounds[k] && state.rounds[k].length).length;
+  $("progressPill").textContent = `Ronde ${Math.min(done + 1, ROUNDS.length)} van ${ROUNDS.length} · ${done} gespeeld`;
+
+  if (!state.players.length) {
+    $("boardList").innerHTML = `<div class="empty">Nog geen spelers.<br>Deel de link in de groepsapp.</div>`;
+    return;
+  }
+  const sorted = [...state.players].sort((a, b) =>
+    scores[a.id] - scores[b.id] || a.name.localeCompare(b.name)
+  );
+  // Gevarenzone: de 3 hoogste scores; bij gelijke stand op de grens doet
+  // iedereen met diezelfde score mee (alleen spelers met > 0 punten)
+  const withPts = [...sorted].reverse().filter(p => scores[p.id] > 0);
+  const threshold = withPts.length ? scores[withPts[Math.min(2, withPts.length - 1)].id] : Infinity;
+  const dangerIds = new Set(withPts.filter(p => scores[p.id] >= threshold).map(p => p.id));
+  const anyPlayed = Object.keys(state.rounds).some(k => state.rounds[k] && state.rounds[k].length);
+  const minScore = Math.min(...Object.values(scores));
+  const uniqueLeader = sorted.length > 1 && scores[sorted[0].id] < scores[sorted[1].id];
+  const played = Object.keys(state.rounds).filter(k => state.rounds[k] && state.rounds[k].length).length;
+  const odds = computeOdds(scores, played);
+
+  // Positiewisseling bepalen t.o.v. vorige render
+  const newOrderIds = sorted.map(p => p.id);
+  const orderKey = newOrderIds.join("|");
+  const orderChanged = lastOrderKey !== null && orderKey !== lastOrderKey;
+  if (orderChanged) {
+    lastMovement = {};
+    newOrderIds.forEach((id, i) => {
+      const prev = prevIndexById[id];
+      if (prev !== undefined && prev !== i) lastMovement[id] = prev - i;
+    });
+  }
+
+  // Oude rijposities vastleggen voor de FLIP-animatie
+  const oldTops = {};
+  $("boardList").querySelectorAll("[data-id]").forEach(r => { oldTops[r.dataset.id] = r.offsetTop; });
+
+  $("boardList").innerHTML = sorted.map((p, i) => {
+    const s = scores[p.id];
+    const d = detail[p.id];
+    const badges = [];
+    if (d.first) badges.push(`${d.first}× eerste`);
+    if (d.last) badges.push(`${d.last}× laatste`);
+    const isKoning = anyPlayed && i === 0 && s === minScore && uniqueLeader;
+    const mv = lastMovement[p.id];
+    const movHtml = mv ? `<span class="mov ${mv > 0 ? "up" : "down"}">${mv > 0 ? "▲" + mv : "▼" + (-mv)}</span>` : "";
+    return `<div class="board-row ${dangerIds.has(p.id) ? "danger" : ""}" data-id="${p.id}">
+      <div class="pos">${i + 1}</div>
+      <div class="board-name">${esc(p.name)}${movHtml}${badges.length ? `<small>${badges.join(" · ")}</small>` : ""}</div>
+      ${isKoning ? '<span class="koning-tag">KONING</span>' : ""}
+      ${dangerIds.has(p.id) ? '<span class="straf-tag">STRAF</span>' : ""}
+      <span class="odds">${odds[p.id] || ""}</span>
+      <div class="pts ${s === 0 ? "zero" : dangerIds.has(p.id) ? "hot" : ""}">${s}<small> pt</small></div>
+    </div>`;
+  }).join("");
+
+  // FLIP: rijen vloeiend naar hun nieuwe plek laten schuiven
+  if (orderChanged) {
+    const rows = $("boardList").querySelectorAll("[data-id]");
+    rows.forEach(r => {
+      const old = oldTops[r.dataset.id];
+      if (old === undefined) return;
+      const delta = old - r.offsetTop;
+      if (!delta) return;
+      r.style.transition = "none";
+      r.style.transform = `translateY(${delta}px)`;
+    });
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      rows.forEach(r => { r.style.transition = ""; r.style.transform = ""; });
+    }));
+  }
+  lastOrderKey = orderKey;
+  prevIndexById = {};
+  newOrderIds.forEach((id, i) => { prevIndexById[id] = i; });
+}
+
+function renderRounds() {
+  const firstOpen = ROUNDS.find(r => !state.rounds[String(r.n)])?.n;
+  $("roundsList").innerHTML = ROUNDS.map(r => {
+    const ranking = state.rounds[String(r.n)];
+    const status = ranking ? "done" : (r.n === firstOpen ? "current" : "");
+    let result = "";
+    if (ranking && ranking.length) {
+      const n = ranking.length;
+      result = `<div class="round-result">` + ranking.map((id, i) => {
+        const pos = i + 1;
+        const cls = (pos <= 2) ? "first" : (pos >= n - 1) ? "last" : "mid";
+        return `<span class="tag ${cls}">${pos}. ${esc(playerName(id))}</span>`;
+      }).join("") + `</div>`;
+    }
+    return `<div class="card round-card ${status}">
+      <div class="round-head">
+        <span class="round-badge">${r.n}</span>
+        <span class="round-title">${esc(r.title)}</span>
+        <span class="round-num">${ranking ? "GESPEELD" : status === "current" ? "NU" : ""}</span>
+      </div>
+      <div class="round-desc">${esc(r.desc)}</div>
+      <div class="round-needs">Nodig: ${esc(r.needs)}</div>
+      ${result}
+    </div>`;
+  }).join("");
+}
+
+function renderAdmin() {
+  // Ronde-chips
+  $("roundSelect").innerHTML = ROUNDS.map(r =>
+    `<button class="round-chip ${r.n === selectedRound ? "sel" : ""} ${state.rounds[String(r.n)] ? "has-result" : ""}" data-round="${r.n}">${r.n}</button>`
+  ).join("");
+  $("roundSelect").querySelectorAll("button").forEach(b =>
+    b.onclick = () => { selectedRound = Number(b.dataset.round); pickedOrder = []; renderAdmin(); }
+  );
+
+  // Speler-tegels
+  $("pickGrid").innerHTML = state.players.map(p => {
+    const idx = pickedOrder.indexOf(p.id);
+    return `<button class="pick-btn ${idx >= 0 ? "picked" : ""}" data-id="${p.id}">
+      ${esc(p.name)}${idx >= 0 ? `<span class="order-badge">${idx + 1}</span>` : ""}
+    </button>`;
+  }).join("") || `<div class="empty" style="grid-column:1/-1">Nog geen spelers geregistreerd.</div>`;
+  $("pickGrid").querySelectorAll("button").forEach(b => {
+    b.onclick = () => {
+      const id = b.dataset.id;
+      const idx = pickedOrder.indexOf(id);
+      if (idx >= 0) pickedOrder.splice(idx, 1); else pickedOrder.push(id);
+      renderAdmin();
+    };
+  });
+
+  const total = state.players.length;
+  $("submitRoundBtn").disabled = !(total >= 4 && pickedOrder.length === total);
+  $("submitRoundBtn").textContent = pickedOrder.length === total && total > 0
+    ? `Uitslag ronde ${selectedRound} opslaan`
+    : `Uitslag opslaan (${pickedOrder.length}/${total})`;
+
+}
+
+/* Quotering per markt. Iedereen start op 2.00; stemmen drukken de quotering
+ * van de favoriet omlaag en die van de rest omhoog (K = demping). */
+function votingOdds(counts) {
+  const K = 2;
+  const totalPicks = PLAYERS.reduce((s, p) => s + (counts[p.id] || 0), 0);
+  const odds = {};
+  PLAYERS.forEach(p => {
+    const pr = ((counts[p.id] || 0) + K) / (totalPicks + 2 * K);
+    odds[p.id] = (1 / pr).toFixed(2);
+  });
+  return odds;
+}
+
+function voteGridHtml(counts, odds, selected, market) {
+  return PLAYERS.map(p => `
+    <button class="vote-opt ${selected.includes(p.id) ? "sel" : ""}" data-market="${market}" data-id="${p.id}">
+      <span>${esc(p.name)}</span>
+      <span class="vo-odds">${odds[p.id]}</span>
+    </button>`).join("");
+}
+
+/* Aan-/uitzetten; bij een derde keuze vervalt de oudste (max 2 per vraag) */
+function togglePick(arr, id) {
+  const i = arr.indexOf(id);
+  if (i >= 0) arr.splice(i, 1);
+  else { arr.push(id); if (arr.length > 2) arr.shift(); }
+}
+
+function votesDisjoint() { return !voteFirst.some(id => voteLast.includes(id)); }
+
+function updateVoteBtn() {
+  const name = $("voterName").value.trim();
+  const ok = name && voteFirst.length === 2 && voteLast.length === 2 && votesDisjoint();
+  $("voteBtn").disabled = !ok;
+  const hasVoted = store.get("gegl_vote") !== null;
+  $("voteBtn").textContent = hasVoted ? "Wijzig je stemmen" : "Breng je 4 stemmen uit";
+}
+
+function renderTeaser() {
+  const v = state.voting || emptyVoting();
+  const firstOdds = votingOdds(v.firstCounts);
+  const lastOdds = votingOdds(v.lastCounts);
+  $("voteFirstGrid").innerHTML = voteGridHtml(v.firstCounts, firstOdds, voteFirst, "first");
+  $("voteLastGrid").innerHTML = voteGridHtml(v.lastCounts, lastOdds, voteLast, "last");
+  document.querySelectorAll(".vote-opt").forEach(b => {
+    b.onclick = () => {
+      const id = b.dataset.id;
+      togglePick(b.dataset.market === "first" ? voteFirst : voteLast, id);
+      renderTeaser();
+    };
+  });
+  updateVoteBtn();
+  $("teaserRoster").innerHTML = v.total
+    ? `<b>${v.total}</b> ${v.total === 1 ? "gokker heeft" : "gokkers hebben"} ingezet:<br>${v.voters.map(esc).join(" · ")}`
+    : "Nog niemand heeft ingezet.";
+}
+
+function renderOdds() {
+  const v = state.voting || emptyVoting();
+  $("oddsPill").textContent = `${v.total} ${v.total === 1 ? "gokker" : "gokkers"} · ${v.total * 4} stemmen`;
+  const markets = [
+    { counts: v.firstCounts, el: "oddsFirst" },
+    { counts: v.lastCounts, el: "oddsLast" },
+  ];
+  for (const m of markets) {
+    const odds = votingOdds(m.counts);
+    const max = Math.max(1, ...PLAYERS.map(p => m.counts[p.id] || 0));
+    const rows = [...PLAYERS].sort((a, b) => (m.counts[b.id] || 0) - (m.counts[a.id] || 0));
+    $(m.el).innerHTML = rows.map(p => {
+      const c = m.counts[p.id] || 0;
+      return `<div class="odds-list-row">
+        <span class="olr-name">${esc(p.name)}</span>
+        <span class="olr-votes">${c}</span>
+        <div class="olr-track"><div class="olr-fill" style="width:${Math.round((c / max) * 100)}%"></div></div>
+        <span class="olr-odds">${odds[p.id]}</span>
+      </div>`;
+    }).join("");
+  }
+}
+
+function renderReveal() {
+  if ($("adminPanel").hidden) return;
+  $("revealStatus").textContent = state.revealed
+    ? "De app is ONTGRENDELD: iedereen ziet scorebord, rondes en quoteringen."
+    : "Iedereen ziet nu alleen de teaser met de stemming. Jij kijkt als spelleider achter de schermen.";
+  $("revealBtn").textContent = state.revealed
+    ? "Vergrendel weer (terug naar de teaser)"
+    : "Onthul de app voor iedereen";
+}
+
+function renderAll() {
+  renderBoard();
+  renderRounds();
+  renderTeaser();
+  renderOdds();
+  renderReveal();
+  if (adminCode !== null || DEMO) renderAdmin();
+}
+
+function showMsg(id, text, ok) {
+  const el = $(id);
+  el.textContent = text;
+  el.className = "msg " + (ok ? "ok" : "err");
+  setTimeout(() => { el.className = "msg"; }, 4000);
+}
+
+/* ================= NAVIGATIE ================= */
+function showView(name) {
+  currentView = name;
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  document.querySelectorAll("nav button").forEach(b => b.classList.toggle("active", b.dataset.view === name));
+  if (name === "register") $("view-register").classList.add("active");
+  else $("view-" + name).classList.add("active");
+}
+document.querySelectorAll("nav button").forEach(b => b.onclick = () => showView(b.dataset.view));
+
+/* ================= ACTIES ================= */
+/* ---- Teaser: stemmen + spelleider-ingang ---- */
+$("voterName").oninput = updateVoteBtn;
+$("voteBtn").onclick = async () => {
+  const voter = $("voterName").value.trim();
+  if (!voter) return showMsg("voteMsg", "Vul eerst je naam in.", false);
+  if (voteFirst.length !== 2 || voteLast.length !== 2) return showMsg("voteMsg", "Kies bij beide vragen precies 2 namen.", false);
+  if (!votesDisjoint()) return showMsg("voteMsg", "Je kunt niet op dezelfde persoon voor eerste én laatste wedden.", false);
+  try {
+    await api("/vote", { method: "POST", body: { voter, first: voteFirst, last: voteLast } });
+    store.set("gegl_vote", JSON.stringify({ voter, first: voteFirst, last: voteLast }));
+    await refresh();
+    showMsg("voteMsg", "Je 4 stemmen zijn geregistreerd. Wijzigen kan tot de onthulling.", true);
+  } catch (e) { showMsg("voteMsg", e.message, false); }
+};
+$("teaserAdminLink").onclick = () => { $("teaserAdminBox").hidden = !$("teaserAdminBox").hidden; };
+$("teaserAdminBtn").onclick = async () => {
+  const code = $("teaserAdminCode").value.trim();
+  if (!code && !DEMO) return showMsg("teaserAdminMsg", "Vul de admin-code in.", false);
+  adminCode = code || "demo";
+  if (!DEMO) {
+    try {
+      await api("/round", { method: "POST", admin: true, body: { round: 0, ranking: [] } });
+    } catch (e) {
+      if (/admin-code/i.test(e.message)) { adminCode = null; return showMsg("teaserAdminMsg", "Onjuiste admin-code.", false); }
+    }
+  }
+  adminUnlocked = true;
+  store.set("gegl_unlocked", "1");
+  $("adminLogin").hidden = true;
+  $("adminPanel").hidden = false;
+  renderAdmin();
+  renderReveal();
+  unlockApp();
+};
+
+/* Teaser-countdown (alleen sfeer — de spelleider bepaalt de echte onthulling) */
+setInterval(() => {
+  if (!document.body.classList.contains("locked")) return;
+  const ms = REVEAL_AT.getTime() - Date.now();
+  if (ms <= 0) {
+    $("teaserCount").textContent = "…";
+    document.querySelector(".t-count-label").textContent = "Het kan elk moment gebeuren";
+    return;
+  }
+  const d = Math.floor(ms / 86400000);
+  const h = Math.floor(ms / 3600000) % 24;
+  const m = Math.floor(ms / 60000) % 60;
+  const s = Math.floor(ms / 1000) % 60;
+  $("teaserCount").textContent =
+    (d > 0 ? d + "d " : "") + String(h).padStart(2, "0") + ":" + String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+}, 250);
+
+$("adminLoginBtn").onclick = async () => {
+  const code = $("adminCode").value.trim();
+  if (!code && !DEMO) return showMsg("adminLoginMsg", "Vul de admin-code in.", false);
+  adminCode = code || "demo";
+  // Valideer de code met een onschuldige call: leeg reset? Nee — we proberen
+  // een bewust ongeldige ronde; 401 = foute code, 400 = code goed.
+  if (!DEMO) {
+    try {
+      await api("/round", { method: "POST", admin: true, body: { round: 0, ranking: [] } });
+    } catch (e) {
+      if (/admin-code/i.test(e.message)) { adminCode = null; return showMsg("adminLoginMsg", "Onjuiste admin-code.", false); }
+    }
+  }
+  $("adminLogin").hidden = true;
+  $("adminPanel").hidden = false;
+  renderAdmin();
+  renderReveal();
+};
+
+$("submitRoundBtn").onclick = async () => {
+  try {
+    await api("/round", { method: "POST", admin: true, body: { round: selectedRound, ranking: pickedOrder } });
+    showMsg("adminMsg", `Ronde ${selectedRound} opgeslagen.`, true);
+    pickedOrder = [];
+    const next = ROUNDS.find(r => r.n > selectedRound && !state.rounds[String(r.n)]);
+    await refresh();
+    if (next) selectedRound = next.n;
+    renderAdmin();
+  } catch (e) { showMsg("adminMsg", e.message, false); }
+};
+
+$("revealBtn").onclick = async () => {
+  try {
+    await api("/reveal", { method: "POST", admin: true, body: { revealed: !state.revealed } });
+    await refresh();
+    showMsg("revealMsg", state.revealed ? "De app is nu voor iedereen zichtbaar." : "Alles weer achter slot.", true);
+  } catch (e) { showMsg("revealMsg", e.message, false); }
+};
+
+document.querySelectorAll("#timerBtns button").forEach(b => {
+  b.onclick = async () => {
+    const seconds = Number(b.dataset.sec);
+    try {
+      await api("/timer", { method: "POST", admin: true, body: { round: selectedRound, seconds } });
+      await refresh();
+      showMsg("timerMsg", seconds > 0 ? `Timer gestart voor ronde ${selectedRound}.` : "Timer gestopt.", true);
+    } catch (e) { showMsg("timerMsg", e.message, false); }
+  };
+});
+
+/* Countdown-weergave: tikt lokaal, synchroniseert via /state (endsAt is leidend) */
+setInterval(() => {
+  const t = state.timer;
+  const bar = $("timerBar");
+  if (!t || !t.endsAt) { bar.hidden = true; return; }
+  const ms = t.endsAt - Date.now();
+  if (ms <= -5000) { bar.hidden = true; return; }   // 5 sec na afloop weer weg
+  bar.hidden = false;
+  const round = ROUNDS.find(x => x.n === t.round);
+  $("timerLabel").textContent = "Ronde " + t.round + (round ? " · " + round.title : "");
+  if (ms <= 0) {
+    $("timerTime").textContent = "TIJD";
+    bar.classList.add("urgent");
+  } else {
+    const totalSec = ms / 1000;
+    const m = Math.floor(totalSec / 60);
+    const rest = totalSec - m * 60;
+    $("timerTime").textContent = m + ":" + String(Math.floor(rest)).padStart(2, "0") + "." + Math.floor((rest % 1) * 10);
+    bar.classList.toggle("urgent", ms < 10000);
+  }
+}, 100);
+
+let resetArmed = false;
+$("resetBtn").onclick = async () => {
+  if (!resetArmed) {
+    resetArmed = true;
+    $("resetBtn").textContent = "Zeker weten? Tik nogmaals om ALLES te wissen";
+    setTimeout(() => { resetArmed = false; $("resetBtn").textContent = "Alles resetten (stemmen + scores)"; }, 4000);
+    return;
+  }
+  try {
+    await api("/reset", { method: "POST", admin: true });
+    store.del("gegl_vote");
+    voteFirst = []; voteLast = [];
+    pickedOrder = []; selectedRound = 1; resetArmed = false;
+    $("resetBtn").textContent = "Alles resetten (stemmen + scores)";
+    await refresh();
+    showMsg("resetMsg", "Alles gewist. Nieuw spel!", true);
+  } catch (e) { showMsg("resetMsg", e.message, false); }
+};
+
+/* ================= REFRESH / POLLING ================= */
+async function refresh() {
+  try {
+    const data = await api("/state");
+    state = {
+      players: data.players || PLAYERS,
+      rounds: data.rounds || {},
+      timer: data.timer || null,
+      voting: data.voting || emptyVoting(),
+      revealed: data.revealed === true,
+    };
+    syncLock();
+    renderAll();
+  } catch { /* netwerkfoutje: volgende poll probeert opnieuw */ }
+}
+
+/* ================= INIT ================= */
+(function init() {
+  if (DEMO) $("demoBanner").hidden = false;
+  adminUnlocked = store.get("gegl_unlocked") === "1";
+  const savedVote = store.get("gegl_vote");
+  if (savedVote) {
+    try {
+      const v = JSON.parse(savedVote);
+      $("voterName").value = v.voter || "";
+      voteFirst = Array.isArray(v.first) ? v.first : [];
+      voteLast = Array.isArray(v.last) ? v.last : [];
+    } catch {}
+  }
+  if (locked()) {
+    document.body.classList.add("locked");
+    showView("teaser");
+  } else {
+    document.title = "GEGL Chosselcrew";
+    showView("board");
+  }
+  refresh();
+  setInterval(() => { if (!DEMO) refresh(); }, POLL_MS);
+})();
+</script>
+</body>
+</html>

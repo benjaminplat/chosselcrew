@@ -1,0 +1,13 @@
+name = "gegl-chosselcrew-api"
+main = "worker.js"
+compatibility_date = "2026-08-01"
+
+# Maak eerst de KV-namespace aan:
+#   wrangler kv namespace create GEGL_KV
+# en plak de teruggegeven id hieronder.
+[[kv_namespaces]]
+binding = "GEGL_KV"
+id = "71d8845b7892434baa06d215d94f48b8"
+
+# De admin-code zet je als secret (NIET hier in de code!):
+#   wrangler secret put ADMIN_CODE
