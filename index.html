@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Vrijdag. 21:00.</title>
+<title>Vrijdag. 20:00.</title>
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
@@ -364,7 +364,7 @@
     <section class="view" id="view-teaser">
       <div class="teaser">
         <div class="t-mark">Vrijdag</div>
-        <div class="t-sub">21:00 · Chosselcrew</div>
+        <div class="t-sub">20:00 · Chosselcrew</div>
         <p class="t-crypt">🐎 Vergelijk het met gokken op paarden 🐎: je mag 4 stemmen&nbsp;uitdelen.<br>2x op wie eerste wordt en 2x op wie laatste&nbsp;wordt.<br>Want zoals je weet: nooit op 1 paard&nbsp;wedden 🐴.<br>De quotering past zich live aan op basis van het&nbsp;stemgedrag.<br>May the odds be in your&nbsp;favour!</p>
         <div class="t-count" id="teaserCount">—</div>
         <div class="t-count-label">Tot de onthulling</div>
@@ -480,9 +480,9 @@ const API_BASE = "https://gegl-chosselcrew-api.benjaminplat.workers.dev";
 const POLL_MS = 5000;
 
 /* De countdown op de teaser telt af naar dit moment — puur sfeer. De app ontgrendelt
- * NIET automatisch: dat doe jij als spelleider met de Onthul-knop in het adminpaneel
- * (binnenkomen kan altijd via de "spelleider"-link onderaan de teaser + admin-code). */
-const REVEAL_AT = new Date("2026-09-04T21:00:00");
+ * NIET automatisch: dat doe jij als spelleider met de unlock-knop in het adminpaneel
+ * (binnenkomen kan altijd via de "unlock"-link onderaan de teaser + admin-code). */
+const REVEAL_AT = new Date("2026-09-04T20:00:00");
 
 const ROUNDS = [
   { n: 1,  title: "Pipey trekken",        desc: "Wie trekt het snelst (of juist het langzaamst) een rietadtje leeg? Ranking op tijd.", needs: "Rietjes + drankje" },
@@ -540,7 +540,7 @@ function unlockApp() {
 }
 function lockApp() {
   document.body.classList.add("locked");
-  document.title = "Vrijdag. 21:00.";
+  document.title = "Vrijdag. 20:00.";
   showView("teaser");
 }
 /* Houd de vergrendeling in sync met de server-vlag (realtime via polling) */
