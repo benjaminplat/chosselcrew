@@ -926,6 +926,35 @@ function renderAll() {
   if (adminCode !== null || DEMO) renderAdmin();
 }
 
+/* Cha-ching: synthetisch kassageluidje, geen los audiobestand nodig */
+let audioCtx = null;
+function playChaChing() {
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    const now = audioCtx.currentTime;
+    const notes = [
+      { freq: 1568, start: 0,    dur: 0.14, gain: 0.22 },  // "cha"
+      { freq: 2093, start: 0.10, dur: 0.32, gain: 0.20 },  // "ching"
+      { freq: 3136, start: 0.10, dur: 0.32, gain: 0.12 },  // extra glans
+    ];
+    notes.forEach(n => {
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = "triangle";
+      osc.frequency.value = n.freq;
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      const t0 = now + n.start;
+      gain.gain.setValueAtTime(0.0001, t0);
+      gain.gain.exponentialRampToValueAtTime(n.gain, t0 + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t0 + n.dur);
+      osc.start(t0);
+      osc.stop(t0 + n.dur + 0.02);
+    });
+  } catch {}
+}
+
 /* Geldregen: kort feestje bij een bevestigde stem */
 function moneyRain() {
   const emojis = ["💵", "💶", "💰", "🤑"];
@@ -975,6 +1004,7 @@ $("voteBtn").onclick = async () => {
     store.set("gegl_vote", JSON.stringify({ voter, first: voteFirst, last: voteLast }));
     await refresh();
     moneyRain();
+    playChaChing();
     showMsg("voteMsg", "Je 4 stemmen zijn geregistreerd. Wijzigen kan tot de onthulling.", true);
   } catch (e) { showMsg("voteMsg", e.message, false); }
 };
