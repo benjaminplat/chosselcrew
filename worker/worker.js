@@ -183,6 +183,15 @@ export default {
           if (!Number.isInteger(round) || round < 1 || round > NUM_ROUNDS) {
             return error(`Ronde moet tussen 1 en ${NUM_ROUNDS} liggen.`);
           }
+
+          /* Lege ranking = alleen déze ronde wissen (los van "Alles resetten") */
+          if (ranking.length === 0) {
+            delete state.rounds[String(round)];
+            if (state.timer && state.timer.round === round) state.timer = null;
+            await saveState(env, state);
+            return json({ ok: true, round, ranking: null });
+          }
+
           const unique = new Set(ranking);
           if (
             ranking.length !== PLAYERS.length ||

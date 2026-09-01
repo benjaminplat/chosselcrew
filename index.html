@@ -425,6 +425,7 @@
           <div class="hint" id="pickHint">Tik de spelers aan in volgorde van uitslag: eerst nummer 1, als laatste nummer 8. Nogmaals tikken = eruit halen.</div>
           <div class="pick-grid" id="pickGrid"></div>
           <button class="btn-primary" id="submitRoundBtn" disabled>Uitslag opslaan</button>
+          <button class="btn-secondary" id="resetRoundBtn" hidden style="margin-top:8px">Reset deze ronde</button>
           <div class="msg" id="adminMsg"></div>
         </div>
 
@@ -599,7 +600,11 @@ function demoApi(path, opts) {
     return Promise.resolve({ ok: true });
   }
   if (path === "/round") {
-    state.rounds[String(body.round)] = body.ranking;
+    if (Array.isArray(body.ranking) && body.ranking.length === 0) {
+      delete state.rounds[String(body.round)];
+    } else {
+      state.rounds[String(body.round)] = body.ranking;
+    }
     if (state.timer && state.timer.round === body.round) state.timer = null;
     return Promise.resolve({ ok: true });
   }
@@ -801,6 +806,9 @@ function renderAdmin() {
     ? `Uitslag ronde ${selectedRound} opslaan`
     : `Uitslag opslaan (${pickedOrder.length}/${total})`;
 
+  const hasResult = Boolean(state.rounds[String(selectedRound)] && state.rounds[String(selectedRound)].length);
+  $("resetRoundBtn").hidden = !hasResult;
+  $("resetRoundBtn").textContent = `Reset ronde ${selectedRound} (wist alleen deze uitslag)`;
 }
 
 /* Quotering per markt. Iedereen start op 2.00; stemmen drukken de quotering
@@ -1005,6 +1013,16 @@ $("submitRoundBtn").onclick = async () => {
     await refresh();
     if (next) selectedRound = next.n;
     renderAdmin();
+  } catch (e) { showMsg("adminMsg", e.message, false); }
+};
+
+$("resetRoundBtn").onclick = async () => {
+  try {
+    await api("/round", { method: "POST", admin: true, body: { round: selectedRound, ranking: [] } });
+    pickedOrder = [];
+    await refresh();
+    renderAdmin();
+    showMsg("adminMsg", `Uitslag van ronde ${selectedRound} gewist.`, true);
   } catch (e) { showMsg("adminMsg", e.message, false); }
 };
 
