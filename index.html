@@ -4,6 +4,13 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Vrijdag. 21:00.</title>
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="icon" type="image/png" href="favicon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="GEGL">
+<meta name="theme-color" content="#0b4527">
 <style>
   /* TOTO-geïnspireerde huisstijl: groen + fel oranje + wit */
   :root {
@@ -395,6 +402,7 @@
       </div>
 
       <div id="adminPanel" hidden>
+        <button class="t-admin" id="backToTeaserBtn">&larr; terug naar de teaserpagina</button>
         <h2>Onthulling</h2>
         <div class="card">
           <div class="hint" id="revealStatus"></div>
@@ -501,9 +509,11 @@ let currentView = "board";
 let lastOrderKey = null;    // voor scorebord-animatie
 let prevIndexById = {};     // vorige positie per speler
 let lastMovement = {};      // ▲/▼ sinds laatste positiewisseling
-let adminUnlocked = false;  // spelleider mag vóór de onthulling naar binnen
 
-function locked() { return !state.revealed && !adminUnlocked; }
+/* Vergrendeld tot de spelleider écht op "Unlock volledige omgeving voor
+ * iedereen" drukt (server-vlag state.revealed) — puur admin-code invullen
+ * geeft alleen toegang tot het Admin-paneel, niet tot de rest van de app. */
+function locked() { return !state.revealed; }
 function unlockApp() {
   document.body.classList.remove("locked");
   document.title = "GEGL Chosselcrew";
@@ -798,12 +808,17 @@ function votingOdds(counts) {
   return odds;
 }
 
-function voteGridHtml(counts, odds, selected, market) {
-  return PLAYERS.map(p => `
+function voteGridHtml(players, odds, selected, market) {
+  return players.map(p => `
     <button class="vote-opt ${selected.includes(p.id) ? "sel" : ""}" data-market="${market}" data-id="${p.id}">
       <span>${esc(p.name)}</span>
       <span class="vo-odds">${odds[p.id]}</span>
     </button>`).join("");
+}
+
+/* Laagste quotering (= grootste favoriet) bovenaan */
+function sortByOdds(players, odds) {
+  return [...players].sort((a, b) => parseFloat(odds[a.id]) - parseFloat(odds[b.id]));
 }
 
 /* Aan-/uitzetten; bij een derde keuze vervalt de oudste (max 2 per vraag) */
@@ -827,8 +842,8 @@ function renderTeaser() {
   const v = state.voting || emptyVoting();
   const firstOdds = votingOdds(v.firstCounts);
   const lastOdds = votingOdds(v.lastCounts);
-  $("voteFirstGrid").innerHTML = voteGridHtml(v.firstCounts, firstOdds, voteFirst, "first");
-  $("voteLastGrid").innerHTML = voteGridHtml(v.lastCounts, lastOdds, voteLast, "last");
+  $("voteFirstGrid").innerHTML = voteGridHtml(sortByOdds(PLAYERS, firstOdds), firstOdds, voteFirst, "first");
+  $("voteLastGrid").innerHTML = voteGridHtml(sortByOdds(PLAYERS, lastOdds), lastOdds, voteLast, "last");
   document.querySelectorAll(".vote-opt").forEach(b => {
     b.onclick = () => {
       const id = b.dataset.id;
@@ -867,12 +882,13 @@ function renderOdds() {
 
 function renderReveal() {
   if ($("adminPanel").hidden) return;
+  $("backToTeaserBtn").hidden = state.revealed;
   $("revealStatus").textContent = state.revealed
     ? "De app is ONTGRENDELD: iedereen ziet scorebord, rondes en quoteringen."
     : "Iedereen ziet nu alleen de teaser met de stemming. Jij kijkt als spelleider achter de schermen.";
   $("revealBtn").textContent = state.revealed
     ? "Vergrendel weer (terug naar de teaser)"
-    : "Onthul de app voor iedereen";
+    : "Unlock volledige omgeving voor iedereen";
 }
 
 function renderAll() {
@@ -928,14 +944,13 @@ $("teaserAdminBtn").onclick = async () => {
       if (/admin-code/i.test(e.message)) { adminCode = null; return showMsg("teaserAdminMsg", "Onjuiste admin-code.", false); }
     }
   }
-  adminUnlocked = true;
-  store.set("gegl_unlocked", "1");
   $("adminLogin").hidden = true;
   $("adminPanel").hidden = false;
   renderAdmin();
   renderReveal();
-  unlockApp();
+  showView("admin");
 };
+$("backToTeaserBtn").onclick = () => showView("teaser");
 
 /* Teaser-countdown (alleen sfeer — de spelleider bepaalt de echte onthulling) */
 setInterval(() => {
@@ -1064,7 +1079,7 @@ async function refresh() {
 /* ================= INIT ================= */
 (function init() {
   if (DEMO) $("demoBanner").hidden = false;
-  adminUnlocked = store.get("gegl_unlocked") === "1";
+  store.del("gegl_unlocked"); // oude, niet meer gebruikte bypass-vlag opruimen
   const savedVote = store.get("gegl_vote");
   if (savedVote) {
     try {
