@@ -152,6 +152,16 @@
   }
   @keyframes tpulse { 0%, 100% { opacity: 1; } 50% { opacity: .5; } }
 
+  /* ---------- Geldregen (gimmick bij stembevestiging) ---------- */
+  .money-rain-item {
+    position: fixed; top: -60px; pointer-events: none; z-index: 999;
+    animation: moneyfall linear forwards; will-change: transform, opacity;
+  }
+  @keyframes moneyfall {
+    0%   { transform: translateY(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(112vh) rotate(360deg); opacity: .85; }
+  }
+
   /* ---------- Stemmen (teaser) ---------- */
   .vote-card { text-align: left; }
   .vote-q {
@@ -369,7 +379,7 @@
           <div class="msg" id="voteMsg"></div>
         </div>
         <div class="t-roster" id="teaserRoster"></div>
-        <button class="t-admin" id="teaserAdminLink">spelleider</button>
+        <button class="t-admin" id="teaserAdminLink">unlock</button>
         <div class="card" id="teaserAdminBox" hidden>
           <input type="password" id="teaserAdminCode" placeholder="Admin-code" autocomplete="off">
           <button class="btn-secondary" id="teaserAdminBtn">Ontgrendel</button>
@@ -916,6 +926,25 @@ function renderAll() {
   if (adminCode !== null || DEMO) renderAdmin();
 }
 
+/* Geldregen: kort feestje bij een bevestigde stem */
+function moneyRain() {
+  const emojis = ["💵", "💶", "💰", "🤑"];
+  const count = 26;
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement("span");
+    el.className = "money-rain-item";
+    el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    el.style.left = Math.random() * 100 + "vw";
+    el.style.fontSize = (20 + Math.random() * 20) + "px";
+    const duration = 1.8 + Math.random() * 1.4;
+    const delay = Math.random() * 0.35;
+    el.style.animationDuration = duration + "s";
+    el.style.animationDelay = delay + "s";
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), (duration + delay) * 1000 + 200);
+  }
+}
+
 function showMsg(id, text, ok) {
   const el = $(id);
   el.textContent = text;
@@ -945,6 +974,7 @@ $("voteBtn").onclick = async () => {
     await api("/vote", { method: "POST", body: { voter, first: voteFirst, last: voteLast } });
     store.set("gegl_vote", JSON.stringify({ voter, first: voteFirst, last: voteLast }));
     await refresh();
+    moneyRain();
     showMsg("voteMsg", "Je 4 stemmen zijn geregistreerd. Wijzigen kan tot de onthulling.", true);
   } catch (e) { showMsg("voteMsg", e.message, false); }
 };
