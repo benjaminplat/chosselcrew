@@ -442,18 +442,9 @@
           <div class="msg" id="revealMsg"></div>
         </div>
 
-        <h2>Ronde 0 · community-stemming</h2>
-        <div class="card">
-          <div class="hint">Berekent automatisch een uitslag uit de huidige quoteringen: de 2 grootste "eerste"-favorieten krijgen nu al 2 en 1 strafpunt, en de 2 grootste "laatste"-favorieten net zo — precies als een echte ronde.</div>
-          <div class="hint" id="round0Status" style="margin-top:8px"></div>
-          <button class="btn-primary" id="computeRound0Btn" style="margin-top:12px">Ronde 0 verwerken</button>
-          <button class="btn-secondary" id="resetRound0Btn" hidden style="margin-top:8px">Reset ronde 0</button>
-          <div class="msg" id="round0Msg"></div>
-        </div>
-
         <h2>Uitslag invoeren</h2>
         <div class="card">
-          <div class="hint">Kies de ronde:</div>
+          <div class="hint">Kies de ronde (0 = community-stemming, 1-10 = de echte rondes):</div>
           <div class="round-select" id="roundSelect"></div>
           <div class="hint" id="pickHint">Tik de spelers aan in volgorde van uitslag: eerst nummer 1, als laatste nummer 8. Nogmaals tikken = eruit halen.</div>
           <div class="pick-grid" id="pickGrid"></div>
@@ -464,7 +455,7 @@
 
         <h2>Rondetimer</h2>
         <div class="card">
-          <div class="hint">Start een countdown voor de hierboven gekozen ronde — live zichtbaar op alle telefoons.</div>
+          <div class="hint" id="timerHint">Start een countdown voor de hierboven gekozen ronde — live zichtbaar op alle telefoons.</div>
           <div class="timer-btns" id="timerBtns">
             <button class="timer-btn" data-sec="30">0:30</button>
             <button class="timer-btn" data-sec="60">1:00</button>
@@ -830,60 +821,13 @@ function roundsOverviewHtml(firstOpen) {
   }).join("");
 }
 
-/* Ronde 0: 2 grootste favorieten op "eerste" -> plek 1+2, 2 grootste op
- * "laatste" -> plek 7+8, de rest ertussenin (telt niet mee). Bij overlap
- * (iemand favoriet op beide markten) schuift de tweede markt door naar de
- * eerstvolgende nog vrije favoriet. */
-function computeRound0Ranking() {
-  const v = state.voting || emptyVoting();
-  const firstOdds = votingOdds(v.firstCounts);
-  const lastOdds = votingOdds(v.lastCounts);
-  const byOdds = (odds) => [...PLAYERS].sort((a, b) => parseFloat(odds[a.id]) - parseFloat(odds[b.id]));
-
-  const used = new Set();
-  const top2 = (sorted) => {
-    const picked = [];
-    for (const p of sorted) {
-      if (used.has(p.id)) continue;
-      picked.push(p.id);
-      used.add(p.id);
-      if (picked.length === 2) break;
-    }
-    return picked;
-  };
-
-  const [firstFav, firstRunnerUp] = top2(byOdds(firstOdds));
-  const [lastFav, lastRunnerUp] = top2(byOdds(lastOdds));
-  const middle = PLAYERS.map(p => p.id).filter(id => !used.has(id));
-
-  return [firstFav, firstRunnerUp, ...middle, lastRunnerUp, lastFav];
-}
-
-function renderRound0() {
-  const r0 = state.rounds["0"];
-  if (r0 && r0.length) {
-    const n = r0.length;
-    $("round0Status").innerHTML = "Verwerkt: " + r0.map((id, i) => {
-      const pos = i + 1;
-      const cls = (pos <= 2) ? "first" : (pos >= n - 1) ? "last" : "mid";
-      return `<span class="tag ${cls}">${pos}. ${esc(playerName(id))}</span>`;
-    }).join("");
-    $("computeRound0Btn").textContent = "Opnieuw berekenen (overschrijft)";
-    $("resetRound0Btn").hidden = false;
-  } else {
-    $("round0Status").textContent = "Nog niet verwerkt.";
-    $("computeRound0Btn").textContent = "Ronde 0 verwerken";
-    $("resetRound0Btn").hidden = true;
-  }
-}
-
 function renderAdmin() {
-  renderRound0();
   // Rondes-overzicht (welke ronde is wat)
   const firstOpenAdmin = ROUNDS.find(r => !state.rounds[String(r.n)])?.n;
   $("adminRoundsOverview").innerHTML = roundsOverviewHtml(firstOpenAdmin);
-  // Ronde-chips
-  $("roundSelect").innerHTML = ROUNDS.map(r =>
+  // Ronde-chips (0 = community-stemming, 1-10 = de echte rondes)
+  const selectableRounds = [{ n: 0 }, ...ROUNDS];
+  $("roundSelect").innerHTML = selectableRounds.map(r =>
     `<button class="round-chip ${r.n === selectedRound ? "sel" : ""} ${state.rounds[String(r.n)] ? "has-result" : ""}" data-round="${r.n}">${r.n}</button>`
   ).join("");
   $("roundSelect").querySelectorAll("button").forEach(b =>
@@ -915,6 +859,13 @@ function renderAdmin() {
   const hasResult = Boolean(state.rounds[String(selectedRound)] && state.rounds[String(selectedRound)].length);
   $("resetRoundBtn").hidden = !hasResult;
   $("resetRoundBtn").textContent = `Reset ronde ${selectedRound} (wist alleen deze uitslag)`;
+
+  // Rondetimer heeft geen betekenis voor ronde 0 (community-stemming, geen live opdracht)
+  const isRound0 = selectedRound === 0;
+  $("timerBtns").querySelectorAll("button").forEach(b => b.disabled = isRound0);
+  $("timerHint").textContent = isRound0
+    ? "Geen timer voor ronde 0 — dit is de community-stemming, geen live opdracht."
+    : "Start een countdown voor de hierboven gekozen ronde — live zichtbaar op alle telefoons.";
 }
 
 /* Quotering per markt. Iedereen start op 2.00; stemmen drukken de quotering
@@ -1170,25 +1121,6 @@ $("submitRoundBtn").onclick = async () => {
     if (next) selectedRound = next.n;
     renderAdmin();
   } catch (e) { showMsg("adminMsg", e.message, false); }
-};
-
-$("computeRound0Btn").onclick = async () => {
-  const ranking = computeRound0Ranking();
-  try {
-    await api("/round", { method: "POST", admin: true, body: { round: 0, ranking } });
-    await refresh();
-    renderRound0();
-    showMsg("round0Msg", "Ronde 0 verwerkt op basis van de community-stemming.", true);
-  } catch (e) { showMsg("round0Msg", e.message, false); }
-};
-
-$("resetRound0Btn").onclick = async () => {
-  try {
-    await api("/round", { method: "POST", admin: true, body: { round: 0, ranking: [] } });
-    await refresh();
-    renderRound0();
-    showMsg("round0Msg", "Ronde 0 gewist.", true);
-  } catch (e) { showMsg("round0Msg", e.message, false); }
 };
 
 $("resetRoundBtn").onclick = async () => {
