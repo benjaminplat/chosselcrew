@@ -431,6 +431,10 @@
 
       <div id="adminPanel" hidden>
         <button class="t-admin" id="backToTeaserBtn">&larr; terug naar de teaserpagina</button>
+
+        <h2>Rondes-overzicht</h2>
+        <div id="adminRoundsOverview"></div>
+
         <h2>Onthulling</h2>
         <div class="card">
           <div class="hint" id="revealStatus"></div>
@@ -505,13 +509,13 @@ const REVEAL_AT = new Date("2026-09-04T20:00:00");
 
 const ROUNDS = [
   { n: 1,  title: "Pipey trekken",        desc: "Wie trekt het snelst (of juist het langzaamst) een rietadtje leeg? Ranking op tijd.", needs: "Rietjes + drankje" },
-  { n: 2,  title: "De geheime bieding",   desc: "Schrijf stiekem een getal tussen 1 en 100 op. Hoogste bieder is nummer 1, laagste is nummer 8. Let op: gelijke getallen zijn ongeldig — die spelers krijgen automatisch de uiterste plekken.", needs: "Briefjes + pennen" },
+  { n: 2,  title: "De geheime bieding",   desc: "Schrijf stiekem een getal tussen 1 en 100 op. Hoogste bieder is nummer 1, laagste is nummer 8. Bij een gelijke hoogste of laagste bieding spelen de betrokken spelers onderling steen-papier-schaar om de openstaande plek(ken) (bijv. twee hoogste gelijk -> schaar om plek 1 en 2). Zijn er 3 of meer gelijk, dan speel je een uitschakelingstoernooi: winnaar pakt de beste nog openstaande plek, verliezer valt terug in de pot, totdat iedereen een plek heeft.", needs: "Briefjes + pennen" },
   { n: 3,  title: "Stop de tijd",          desc: "Start de stopwatch, telefoon dicht, en stop op gevoel precies op 35 seconden. Dichtstbij wint.", needs: "Telefoon met stopwatch" },
-  { n: 4,  title: "Raad het gewicht",      desc: "Er ligt iets op de keukenweegschaal. Raad het gewicht in grammen. Dichtstbij is nummer 1.", needs: "Keukenweegschaal + object + papier & pen" },
+  { n: 4,  title: "Daily GeoGuessr",       desc: "Speel allemaal dezelfde GeoGuessr Daily Challenge. Hoogste totaalscore is nummer 1, laagste is nummer 8.", needs: "Telefoon of laptop met internet (geoguessr.com/daily-challenges)" },
   { n: 5,  title: "Papieren piloot",       desc: "Vouw in 3 minuten een papieren vliegtuigje en gooi vanaf de lijn. Ranking op afstand.", needs: "A4-papier + plakband" },
   { n: 6,  title: "Ren een ronde om",      desc: "Ren zo snel mogelijk een ronde om (route nader te bepalen). Snelste is nummer 1, langzaamste is nummer 8.", needs: "Route + stopwatch" },
   { n: 7,  title: "De flamingo",           desc: "Op één been, ogen dicht, armen over elkaar. Wie het langst blijft staan is nummer 1.", needs: "Niets — alleen een timer" },
-  { n: 8,  title: "Doprand sjoelen",       desc: "Schuif een bierdop zo dicht mogelijk naar de tafelrand. Eraf = automatisch laatste.", needs: "Kroonkurken + gladde tafel" },
+  { n: 8,  title: "Raad het gewicht",      desc: "Er ligt iets op de keukenweegschaal. Raad het gewicht in grammen. Dichtstbij is nummer 1.", needs: "Keukenweegschaal + object + papier & pen" },
   { n: 9,  title: "Raad de datum",         desc: "Raad de exacte releasedatum van GTA San Andreas (dag, maand én jaar). Dichtstbij is nummer 1.", needs: "Briefjes + pennen" },
   { n: 10, title: "CHOSSELCREW Scrabble",  desc: "Maak in 1 minuut het langste woord met alleen letters uit CHOSSELCREW. Ongeldig woord = laatste.", needs: "Briefjes + pennen + timer" },
 ];
@@ -797,7 +801,11 @@ function renderRounds() {
     }).join("") + `</div>
     </div>`;
   }
-  $("roundsList").innerHTML = r0Html + ROUNDS.map(r => {
+  $("roundsList").innerHTML = r0Html + roundsOverviewHtml(firstOpen);
+}
+
+function roundsOverviewHtml(firstOpen) {
+  return ROUNDS.map(r => {
     const ranking = state.rounds[String(r.n)];
     const status = ranking ? "done" : (r.n === firstOpen ? "current" : "");
     let result = "";
@@ -871,6 +879,9 @@ function renderRound0() {
 
 function renderAdmin() {
   renderRound0();
+  // Rondes-overzicht (welke ronde is wat)
+  const firstOpenAdmin = ROUNDS.find(r => !state.rounds[String(r.n)])?.n;
+  $("adminRoundsOverview").innerHTML = roundsOverviewHtml(firstOpenAdmin);
   // Ronde-chips
   $("roundSelect").innerHTML = ROUNDS.map(r =>
     `<button class="round-chip ${r.n === selectedRound ? "sel" : ""} ${state.rounds[String(r.n)] ? "has-result" : ""}" data-round="${r.n}">${r.n}</button>`
